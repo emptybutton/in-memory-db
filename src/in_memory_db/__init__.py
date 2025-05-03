@@ -1,1 +1,1 @@
-from in_memory_db.x import X as X
+from in_memory_db.db import InMemoryDb as InMemoryDb

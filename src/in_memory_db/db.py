@@ -10,7 +10,7 @@ class NoTranasctionError(Exception): ...
 @dataclass
 class InMemoryDb[ValueT = Any]:
     _storage: list[ValueT] = field(default_factory=list)
-    _snapshots: list[list[ValueT]] = field(init=False)
+    _snapshots: list[list[ValueT]] = field(init=False, default_factory=list)
 
     def __iter__(self) -> Iterator[ValueT]:
         return iter(list(self._storage))

@@ -1,6 +1,6 @@
 [project]
 name = "in_memory_db"
-version = "0.2.0"
+version = "0.2.1"
 description = "(Not) ACID in-memory database"
 authors = [
     {name = "Alexander Smolin", email = "88573504+emptybutton@users.noreply.github.com"}

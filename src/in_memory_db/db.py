@@ -1,7 +1,9 @@
-from collections.abc import Callable, Iterable, Iterator
+from asyncio import Lock
+from collections.abc import AsyncIterator, Callable, Iterable, Iterator
+from contextlib import asynccontextmanager
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Self
 
 
 class NoTranasctionError(Exception): ...
@@ -13,7 +15,7 @@ class InMemoryDb[ValueT = Any]:
     _snapshots: list[list[ValueT]] = field(init=False, default_factory=list)
 
     def __iter__(self) -> Iterator[ValueT]:
-        return iter(list(self._storage))
+        return iter(self._storage)
 
     def __bool__(self) -> bool:
         return bool(self._storage)
@@ -89,7 +91,13 @@ class InMemoryDbSubset[ValueT]:
         return bool(tuple(self))
 
     def __len__(self) -> int:
-        return len(tuple(self))
+        counter = 0
+
+        for value in self.db:
+            if isinstance(value, self.type_):
+                counter += 1
+
+        return counter
 
     def select_many(
         self, is_selected: Callable[[ValueT], bool]
@@ -109,3 +117,27 @@ class InMemoryDbSubset[ValueT]:
         for value in self:
             if is_selected(value):
                 self.db.remove(value)
+
+
+class Rollback(Exception): ...
+
+
+@dataclass(frozen=True)
+class InMemoryDbAsyncTransactionOrchestrator:
+    _db: InMemoryDb
+    _lock: Lock = field(init=False, default_factory=Lock)
+
+    @asynccontextmanager
+    async def transaction(self) -> AsyncIterator[Self]:
+        async with self._lock:
+            self._db.begin()
+
+            try:
+                yield self
+            except Rollback:
+                self._db.rollback()
+            except Exception as error:
+                self._db.rollback()
+                raise error from error
+            else:
+                self._db.commit()

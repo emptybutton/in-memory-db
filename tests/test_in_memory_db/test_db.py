@@ -50,3 +50,17 @@ def test_select_many_no_values(db_with_abc: Db) -> None:
     values = db_with_abc.select_many(lambda it: it in "xyz")
 
     assert values == tuple()
+
+
+def test_empty_subset_iter(db_with_abc: Db) -> None:
+    values = tuple(db_with_abc.subset(int))
+
+    assert values == tuple()
+
+
+def test_empty_subset_bool(db_with_abc: Db) -> None:
+    assert not db_with_abc.subset(int)
+
+
+def test_empty_subset_len(db_with_abc: Db) -> None:
+    assert len(db_with_abc.subset(int)) == 0

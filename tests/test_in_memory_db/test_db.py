@@ -64,3 +64,26 @@ def test_empty_subset_bool(db_with_abc: Db) -> None:
 
 def test_empty_subset_len(db_with_abc: Db) -> None:
     assert len(db_with_abc.subset(int)) == 0
+
+
+def test_transaction_rollback(db_with_abc: Db) -> None:
+    db_with_abc.begin()
+    db_with_abc.insert("x")
+    db_with_abc.rollback()
+
+    assert tuple(db_with_abc) == ("a", "b", "c")
+
+
+def test_transaction_commit(db_with_abc: Db) -> None:
+    db_with_abc.begin()
+    db_with_abc.insert("x")
+    db_with_abc.commit()
+
+    assert tuple(db_with_abc) == ("a", "b", "c", "x")
+
+
+def test_pending_transaction(db_with_abc: Db) -> None:
+    db_with_abc.begin()
+    db_with_abc.insert("x")
+
+    assert tuple(db_with_abc) == ("a", "b", "c", "x")
